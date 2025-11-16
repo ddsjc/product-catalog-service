@@ -1,4 +1,4 @@
-package sukhov.danila.domain.helpers;
+package sukhov.danila.domain.services.helpers;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

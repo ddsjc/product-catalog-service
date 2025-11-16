@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: danila
+      changes:
+        - insert:
+            tableName: users
+            schemaName: marketplace
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: 1
+              - column:
+                  name: username
+                  value: admin
+              - column:
+                  name: password_hash
+                  value: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918" # hash("admin")
+              - column:
+                  name: role
+                  value: ADMIN
+
+        - insert:
+            tableName: categories
+            schemaName: marketplace
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: 1
+              - column:
+                  name: name
+                  value: Электроника
+
+        - insert:
+            tableName: brands
+            schemaName: marketplace
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: 1
+              - column:
+                  name: name
+                  value: Apple
+              - column:
+                  name: user_owner_id
+                  valueNumeric: 1

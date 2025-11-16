@@ -1,9 +1,11 @@
 package sukhov.danila.domain.services;
 
-import sukhov.danila.domain.helpers.PasswordUtil;
+import sukhov.danila.domain.exceptions.AlreadyExistsException;
+import sukhov.danila.domain.repositories.UserRepository;
+import sukhov.danila.domain.services.helpers.PasswordUtil;
 import sukhov.danila.domain.entities.ERole;
 import sukhov.danila.domain.entities.UserEntity;
-import sukhov.danila.out.repositories.UserRepository;
+import sukhov.danila.out.persistence.jdbc.UserRepositoryImpl;
 
 import java.util.Scanner;
 
@@ -17,7 +19,7 @@ import java.util.Scanner;
  *     <li>Хеширование паролей и аудит действий</li>
  * </ul>
  *
- * Использует {@link UserRepository} для взаимодействия с хранилищем пользователей,
+ * Использует {@link UserRepositoryImpl} для взаимодействия с хранилищем пользователей,
  * {@link PasswordUtil} для работы с паролями, и {@link AuditService} для записи логов.
  *
  * @author
@@ -25,10 +27,9 @@ import java.util.Scanner;
  * @version 1.0
  */
 public class AuthService {
-    private PasswordUtil passwordHasher;
-    private UserRepository userRepository;
-    private AuditService auditService;
-    private Scanner scanner;
+    private final UserRepository userRepository;
+    private final AuditService auditService;
+    private final Scanner scanner;
 
     public AuthService(UserRepository userRepository, AuditService auditService, Scanner scanner) {
         this.userRepository = userRepository;
@@ -36,60 +37,56 @@ public class AuthService {
         this.scanner = scanner;
     }
 
-    /**
-     * Регистрирует нового пользователя в системе.
-     * <p>Проверяет наличие пользователя, запрашивает данные и сохраняет их в хранилище.</p>
-     *
-     * @return созданный {@link UserEntity} или {@code null}, если регистрация не удалась
-     */
     public UserEntity register() {
-        System.out.print("Введите username: ");
-        String username = scanner.nextLine();
-        if (userRepository.getUser(username) != null) { //вынести в контроллер хелпер!!!
-            System.out.println("Пользователь уже существует!");
+        System.out.print("Имя пользователя: ");
+        String username = scanner.nextLine().trim();
+        if (username.isEmpty()) {
+            System.out.println("Имя не может быть пустым.");
+            return null;
+        }
+        if (userRepository.findByName(username).isPresent()) {
+            throw new AlreadyExistsException("Пользователь '" + username + "' уже существует");
+        }
+
+        System.out.print("Пароль: ");
+        String password = scanner.nextLine();
+        if (password.isEmpty()) {
+            System.out.println("Пароль не может быть пустым.");
             return null;
         }
 
-        System.out.print("Введите пароль: ");
-        String password = scanner.nextLine();
+        System.out.println("Роль: 1 - Покупатель, 2 - Продавец");
+        String roleChoice = scanner.nextLine().trim();
+        String role = "2".equals(roleChoice) ? ERole.SELLER.name() : ERole.USER.name();
 
-        System.out.println("Выберите роль: 1 - Покупатель, 2 - Продавец");
-        String choice = scanner.nextLine();
-        ERole role = choice.equals("2") ? ERole.SELLER : ERole.USER;
+        String passwordHash = PasswordUtil.hashPassword(password);
+        UserEntity user = UserEntity.builder()
+                .username(username)
+                .passwordHash(passwordHash)
+                .role(role)
+                .build();
 
-        String hash = passwordHasher.hashPassword(password);
-        UserEntity newUser = new UserEntity(username, hash, role);
-        if (userRepository.addUser(newUser)) {
-            auditService.log(newUser.getUsername(), String.format("Регистрация нового пользователя: " + username + " роль: " + role));
-            System.out.println("Регистрация успешна!");
-            return newUser;
-        }
-        return null;
+        user = userRepository.save(user);
+        auditService.log(username, "регистрация (роль: " + role + ")");
+        System.out.println("Регистрация успешна!");
+        return user;
     }
 
-    /**
-     * Выполняет вход пользователя в систему.
-     * <p>Проверяет корректность логина и пароля, записывает факт входа в аудит.</p>
-     *
-     * @return объект {@link UserEntity} при успешной аутентификации, иначе {@code null}
-     */
     public UserEntity login() {
-        System.out.print("Введите username: ");
-        String username = scanner.nextLine();
-        UserEntity user = userRepository.getUser(username);
-        if (user == null) {
-            System.out.println("Пользователь не найден");
-            return null;
-        }
-        System.out.print("Введите пароль: ");
+        System.out.print("Имя пользователя: ");
+        String username = scanner.nextLine().trim();
+        UserEntity user = userRepository.findByName(username)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        System.out.print("Пароль: ");
         String password = scanner.nextLine();
-        if (passwordHasher.successSignIn(password, user.getPasswordHash())) {
-            auditService.log(username,"Вход пользователя в систему");
-            System.out.println("Вход успешен!");
-            return user;
-        } else {
-            System.out.println("Неверный пароль");
+        if (!PasswordUtil.successSignIn(password, user.getPasswordHash())) {
+            System.out.println("Неверный пароль.");
             return null;
         }
+
+        auditService.log(username, "вход в систему");
+        System.out.println("Добро пожаловать, " + username + "!");
+        return user;
     }
 }

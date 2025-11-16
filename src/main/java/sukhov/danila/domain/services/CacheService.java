@@ -18,4 +18,5 @@ public class CacheService {
     public boolean contains(String key){
         return cache.containsKey(key);
     }
+    public void clear() {cache.clear();}
 }
