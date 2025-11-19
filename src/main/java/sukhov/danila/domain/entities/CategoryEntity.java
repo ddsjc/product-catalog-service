@@ -1,30 +1,22 @@
 package sukhov.danila.domain.entities;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
 import java.util.Objects;
-
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
+@Builder
 public class CategoryEntity implements Serializable {
-    private String name;
-    public CategoryEntity(String name) {
-        this.name = name;
-    }
-    public String getName() {return name;}
+    @EqualsAndHashCode.Include
+    Long id;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryEntity)) return false;
-        CategoryEntity that = (CategoryEntity) o;
-        return Objects.equals(name.toLowerCase(), that.name.toLowerCase());
-    }
+    String name;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(name.toLowerCase());
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
 }

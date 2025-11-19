@@ -1,27 +1,23 @@
 package sukhov.danila.domain.entities;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
+@Builder
 public class BrandEntity implements Serializable {
-    private String name;
-    private String ownerUsername;
 
-    public BrandEntity(String name, String ownerUsername) {
-        this.name = name;
-        this.ownerUsername = ownerUsername;
-    }
+    @EqualsAndHashCode.Include
+    Long id;
+    String name;
+    Long userOwnerId;
 
-    public String getName() {return name;}
-    public String getOwnerUsername() {return ownerUsername;}
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof BrandEntity)) return false;
-        return ((BrandEntity) o).name.equalsIgnoreCase(this.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return name.toLowerCase().hashCode();
-    }
 }

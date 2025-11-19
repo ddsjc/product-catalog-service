@@ -1,20 +1,21 @@
 package sukhov.danila.domain.entities;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
-
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
+@Builder
 public class UserEntity implements Serializable {
-    private String username;
-    private String passwordHash;
-    private ERole role;
-
-    public UserEntity(String username, String password, ERole role) {
-        this.username = username;
-        this.passwordHash = password;
-        this.role = role;
-    }
-
-    public String getUsername() {return username;}
-    public String getPasswordHash() {return passwordHash;}
-    public ERole getRole() {return role;}
-
+    @EqualsAndHashCode.Include
+    Long id;
+    String username;
+    String passwordHash;
+    String role;
 }
