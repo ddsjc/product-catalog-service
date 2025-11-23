@@ -1,63 +1,47 @@
 package sukhov.danila.domain.repositories;
 
-import java.sql.Connection;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import sukhov.danila.BaseIntegrationTest;
 import sukhov.danila.domain.entities.UserEntity;
 import sukhov.danila.out.persistence.jdbc.UserRepositoryImpl;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
-@Testcontainers
-public class UserRepositoryTest {
-    @Container
-    private static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:15")
-                    .withDatabaseName("test_marketplace")
-                    .withUsername("test_user")
-                    .withPassword("test_pass");
+/**
+ * Интеграционный тест для UserRepository.
+ */
+public class UserRepositoryTest extends BaseIntegrationTest {
 
-    private Connection connection;
     private UserRepository userRepository;
 
     @BeforeEach
-    void setUp() throws Exception {
-        connection = DriverManager.getConnection(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword()
-        );
+    void setUp() {
+        try (Connection conn = dataSource.getConnection();
+             var stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM marketplace.products");
+            stmt.execute("DELETE FROM marketplace.brands");
+            stmt.execute("DELETE FROM marketplace.categories");
+            stmt.execute("DELETE FROM marketplace.users");
 
-        connection.createStatement().execute("CREATE SCHEMA IF NOT EXISTS marketplace");
-        connection.createStatement().execute(
-                "CREATE TABLE IF NOT EXISTS marketplace.users (" +
-                        "id BIGSERIAL PRIMARY KEY, " +
-                        "username VARCHAR(100) NOT NULL UNIQUE, " +
-                        "password_hash VARCHAR(255) NOT NULL, " +
-                        "role VARCHAR(20) NOT NULL)"
-        );
-
-        userRepository = new UserRepositoryImpl(connection);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
+            stmt.execute("ALTER SEQUENCE marketplace.users_id_seq RESTART WITH 1");
+            stmt.execute("ALTER SEQUENCE marketplace.brands_id_seq RESTART WITH 1");
+            stmt.execute("ALTER SEQUENCE marketplace.categories_id_seq RESTART WITH 1");
+            stmt.execute("ALTER SEQUENCE marketplace.products_id_seq RESTART WITH 1");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to clean tables", e);
         }
+
+        userRepository = new UserRepositoryImpl(dataSource);
     }
 
+    /**
+     * Проверяет сохранение нового пользователя и генерацию ID.
+     */
     @Test
     void shouldSaveNewUserAndAssignId() {
-
         UserEntity user = new UserEntity(null, "testuser", "secure_hash", "USER");
 
         UserEntity saved = userRepository.save(user);
@@ -66,8 +50,12 @@ public class UserRepositoryTest {
         assertThat(saved.getUsername()).isEqualTo("testuser");
     }
 
+    /**
+     * Проверяет поиск пользователя по имени.
+     */
     @Test
     void shouldFindUserByUsername() {
+
         UserEntity user = new UserEntity(null, "danilchik", "hash123", "SELLER");
         userRepository.save(user);
 

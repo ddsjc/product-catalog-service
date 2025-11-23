@@ -1,25 +1,28 @@
+// sukhov.danila.out.persistence.jdbc.ProductRepositoryImpl
 package sukhov.danila.out.persistence.jdbc;
 
-import sukhov.danila.out.persistence.mappers.ProductRowMapper;
-import sukhov.danila.domain.repositories.ProductRepository;
 import sukhov.danila.domain.entities.ProductEntity;
+import sukhov.danila.domain.repositories.ProductRepository;
+import sukhov.danila.out.persistence.mappers.ProductRowMapper;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
 public class ProductRepositoryImpl implements ProductRepository {
 
-    private final Connection connection;
+    private final DataSource dataSource;
 
-    public ProductRepositoryImpl(Connection connection) {
-        this.connection = connection;
+    public ProductRepositoryImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
     public ProductEntity save(ProductEntity product) {
         if (product.getId() == null) {
             String sql = "INSERT INTO marketplace.products (name, category_id, brand_id, price, user_owner_id) VALUES (?, ?, ?, ?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, product.getName());
                 stmt.setLong(2, product.getCategoryId());
                 stmt.setLong(3, product.getBrandId());
@@ -37,7 +40,8 @@ public class ProductRepositoryImpl implements ProductRepository {
             }
         } else {
             String sql = "UPDATE marketplace.products SET name = ?, category_id = ?, brand_id = ?, price = ?, user_owner_id = ? WHERE id = ?";
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, product.getName());
                 stmt.setLong(2, product.getCategoryId());
                 stmt.setLong(3, product.getBrandId());
@@ -55,7 +59,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public Optional<ProductEntity> findById(Long id) {
         String sql = "SELECT id, name, category_id, brand_id, price, user_owner_id FROM marketplace.products WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -71,7 +76,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public Optional<ProductEntity> findByName(String name) {
         String sql = "SELECT id, name, category_id, brand_id, price, user_owner_id FROM marketplace.products WHERE name = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, name);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -88,7 +94,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     public List<ProductEntity> findAll() {
         String sql = "SELECT id, name, category_id, brand_id, price, user_owner_id FROM marketplace.products";
         List<ProductEntity> products = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 products.add(ProductRowMapper.productRowMap(rs));
@@ -102,7 +109,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public void deleteById(Long id) {
         String sql = "DELETE FROM marketplace.products WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -110,4 +118,3 @@ public class ProductRepositoryImpl implements ProductRepository {
         }
     }
 }
-

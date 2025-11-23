@@ -5,6 +5,7 @@ import sukhov.danila.domain.entities.UserEntity;
 import sukhov.danila.domain.repositories.UserRepository;
 import sukhov.danila.out.persistence.mappers.UserRowMapper;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,17 +13,18 @@ import java.util.Optional;
 
 public class UserRepositoryImpl implements UserRepository {
 
-    private final Connection connection;
+    private final DataSource dataSource;
 
-    public UserRepositoryImpl(Connection connection) {
-        this.connection = connection;
+    public UserRepositoryImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
     public UserEntity save(UserEntity user) {
         if (user.getId() == null) {
             String sql = "INSERT INTO marketplace.users (username, password_hash, role) VALUES (?, ?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, user.getUsername());
                 stmt.setString(2, user.getPasswordHash());
                 stmt.setString(3, user.getRole());
@@ -38,7 +40,8 @@ public class UserRepositoryImpl implements UserRepository {
             }
         } else {
             String sql = "UPDATE marketplace.users SET username = ?, password_hash = ?, role = ? WHERE id = ?";
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, user.getUsername());
                 stmt.setString(2, user.getPasswordHash());
                 stmt.setString(3, user.getRole());
@@ -54,7 +57,8 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<UserEntity> findById(Long id) {
         String sql = "SELECT id, username, password_hash, role FROM marketplace.users WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -70,7 +74,8 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<UserEntity> findByName(String username) {
         String sql = "SELECT id, username, password_hash, role FROM marketplace.users WHERE username = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -87,7 +92,8 @@ public class UserRepositoryImpl implements UserRepository {
     public List<UserEntity> findAll() {
         String sql = "SELECT id, username, password_hash, role FROM marketplace.users";
         List<UserEntity> users = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 users.add(UserRowMapper.userRowMapper(rs));
@@ -101,7 +107,8 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public void deleteUserById(Long id) {
         String sql = "DELETE FROM marketplace.users WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {

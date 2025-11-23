@@ -5,23 +5,25 @@ import sukhov.danila.domain.repositories.CategoryRepository;
 import sukhov.danila.out.persistence.mappers.CategoryRowMapper;
 import sukhov.danila.domain.entities.CategoryEntity;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
 
 public class CategoryRepositoryImpl implements CategoryRepository {
 
-    private final Connection connection;
+    private final DataSource dataSource;
 
-    public CategoryRepositoryImpl(Connection connection) {
-        this.connection = connection;
+    public CategoryRepositoryImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
     public CategoryEntity save(CategoryEntity category) {
         if (category.getId() == null) {
             String sql = "INSERT INTO marketplace.categories (name) VALUES (?)";
-            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, category.getName());
                 stmt.executeUpdate();
 
@@ -35,7 +37,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
             }
         } else {
             String sql = "UPDATE marketplace.categories SET name = ? WHERE id = ?";
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, category.getName());
                 stmt.setLong(2, category.getId());
                 stmt.executeUpdate();
@@ -49,7 +52,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     @Override
     public Optional<CategoryEntity> findById(Long id) {
         String sql = "SELECT id, name FROM marketplace.categories WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -65,7 +69,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     @Override
     public Optional<CategoryEntity> findByName(String name) {
         String sql = "SELECT id, name FROM marketplace.categories WHERE name = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, name);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -82,7 +87,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     public List<CategoryEntity> findAll() {
         String sql = "SELECT id, name FROM marketplace.categories";
         List<CategoryEntity> categories = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 categories.add(CategoryRowMapper.categoryRowMap(rs));
@@ -96,7 +102,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     @Override
     public void deleteCategoryByName(String name) {
         String sql = "DELETE FROM marketplace.categories WHERE name = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, name);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -107,7 +114,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     @Override
     public void deleteCategoryById(Long id) {
         String sql = "DELETE FROM marketplace.categories WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
