@@ -20,17 +20,10 @@ import java.time.LocalDateTime;
  */
 public class AuditService {
     private static final String LOG_FILE = "audit.log";
-
-    /**
-     * Записывает строку в лог: дата, пользователь и его действие.
-     *
-     * @param username имя пользователя, выполняющего действие
-     * @param action   описание действия
-     */
-    public static void log(String username, String action){
-        try(FileWriter fileWriter = new FileWriter(LOG_FILE, true)){
+    public void log(String username, String action){
+        try (FileWriter fileWriter = new FileWriter(LOG_FILE, true)) {
             fileWriter.write(LocalDateTime.now() + " -|- " + username + " -|- " + action + "\n");
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Ошибка записи лога");
         }
     }

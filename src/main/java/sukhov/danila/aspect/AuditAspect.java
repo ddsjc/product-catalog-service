@@ -10,6 +10,7 @@ import sukhov.danila.domain.services.AuditService;
 public class AuditAspect {
     @After("@annotation(auditAction)")
     public void logAudit(JoinPoint joinPoint, AuditAction auditAction) {
+        System.out.println(">>> АСПЕКТ СРАБОТАЛ: " + auditAction.value());
         String username = getCurrentUsername();
         String action = auditAction.value();
         new AuditService().log(username, action);
