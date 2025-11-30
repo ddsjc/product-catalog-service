@@ -1,9 +1,12 @@
 package sukhov.danila.domain.services;
 
+import sukhov.danila.aspect.AuditAction;
 import sukhov.danila.domain.entities.BrandEntity;
 import sukhov.danila.domain.entities.UserEntity;
 import sukhov.danila.domain.exceptions.AlreadyExistsException;
 import sukhov.danila.domain.repositories.BrandRepository;
+import sukhov.danila.dtos.BrandDTO;
+import sukhov.danila.mappers.BrandMapper;
 import sukhov.danila.out.persistence.jdbc.BrandRepositoryImpl;
 
 import java.util.Scanner;
@@ -33,41 +36,32 @@ import java.util.Scanner;
  */
 public class BrandService {
     private final BrandRepository brandRepository;
-    private final AuditService auditService;
-    private final Scanner scanner;
 
-    public BrandService(BrandRepository brandRepository, AuditService auditService, Scanner scanner) {
+    public BrandService(BrandRepository brandRepository) {
         this.brandRepository = brandRepository;
-        this.auditService = auditService;
-        this.scanner = scanner;
     }
 
-    public BrandEntity createBrand(UserEntity currentUser) {
-        System.out.print("Название бренда: ");
-        String name = scanner.nextLine().trim();
-        if (name.isEmpty()) {
-            throw new IllegalArgumentException("Название бренда не может быть пустым");
+    @AuditAction("Создал бренд")
+    public BrandDTO createBrand(String name, UserEntity currentUser) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Название бренда обязательно");
         }
         if (brandRepository.findByName(name).isPresent()) {
             throw new AlreadyExistsException("Бренд '" + name + "' уже существует");
         }
+
         BrandEntity brand = BrandEntity.builder()
                 .name(name)
                 .userOwnerId(currentUser.getId())
                 .build();
-        brand = brandRepository.save(brand);
-        auditService.log(currentUser.getUsername(), "создал бренд: " + name);
-        System.out.println("Бренд успешно добавлен!");
-        return brand;
-    }
 
-    public void listBrands() {
-        var brands = brandRepository.findAll();
-        if (brands.isEmpty()) {
-            System.out.println("Нет брендов.");
-            return;
-        }
-        System.out.println("Бренды:");
-        brands.forEach(b -> System.out.println("- " + b.getName() + " (владелец: " + b.getUserOwnerId() + ")"));
+        BrandEntity saved = brandRepository.save(brand);
+        return BrandMapper.INSTANCE.toDto(saved);
+    }
+    @AuditAction("Выполнил поиск всех брендов")
+    public java.util.List<BrandDTO> findAllBrands() {
+        return brandRepository.findAll().stream()
+                .map(BrandMapper.INSTANCE::toDto)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

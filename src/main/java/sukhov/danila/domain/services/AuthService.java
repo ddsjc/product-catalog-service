@@ -1,10 +1,13 @@
 package sukhov.danila.domain.services;
 
+import sukhov.danila.aspect.AuditAction;
 import sukhov.danila.domain.exceptions.AlreadyExistsException;
 import sukhov.danila.domain.repositories.UserRepository;
 import sukhov.danila.domain.services.helpers.PasswordUtil;
 import sukhov.danila.domain.entities.ERole;
 import sukhov.danila.domain.entities.UserEntity;
+import sukhov.danila.dtos.UserDTO;
+import sukhov.danila.mappers.UserMapper;
 import sukhov.danila.out.persistence.jdbc.UserRepositoryImpl;
 
 import java.util.Scanner;
@@ -28,36 +31,22 @@ import java.util.Scanner;
  */
 public class AuthService {
     private final UserRepository userRepository;
-    private final AuditService auditService;
-    private final Scanner scanner;
 
-    public AuthService(UserRepository userRepository, AuditService auditService, Scanner scanner) {
+    public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.auditService = auditService;
-        this.scanner = scanner;
     }
 
-    public UserEntity register() {
-        System.out.print("Имя пользователя: ");
-        String username = scanner.nextLine().trim();
-        if (username.isEmpty()) {
-            System.out.println("Имя не может быть пустым.");
-            return null;
+    @AuditAction("Зарегистрировался в сервисе")
+    public UserDTO register(String username, String password, String role) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Имя пользователя обязательно");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Пароль обязателен");
         }
         if (userRepository.findByName(username).isPresent()) {
             throw new AlreadyExistsException("Пользователь '" + username + "' уже существует");
         }
-
-        System.out.print("Пароль: ");
-        String password = scanner.nextLine();
-        if (password.isEmpty()) {
-            System.out.println("Пароль не может быть пустым.");
-            return null;
-        }
-
-        System.out.println("Роль: 1 - Покупатель, 2 - Продавец");
-        String roleChoice = scanner.nextLine().trim();
-        String role = "2".equals(roleChoice) ? ERole.SELLER.name() : ERole.USER.name();
 
         String passwordHash = PasswordUtil.hashPassword(password);
         UserEntity user = UserEntity.builder()
@@ -66,27 +55,18 @@ public class AuthService {
                 .role(role)
                 .build();
 
-        user = userRepository.save(user);
-        auditService.log(username, "регистрация (роль: " + role + ")");
-        System.out.println("Регистрация успешна!");
-        return user;
+        UserEntity saved = userRepository.save(user);
+        return UserMapper.INSTANCE.toDto(saved);
     }
-
-    public UserEntity login() {
-        System.out.print("Имя пользователя: ");
-        String username = scanner.nextLine().trim();
+    @AuditAction("Залогинился")
+    public UserDTO login(String username, String password) {
         UserEntity user = userRepository.findByName(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        System.out.print("Пароль: ");
-        String password = scanner.nextLine();
         if (!PasswordUtil.successSignIn(password, user.getPasswordHash())) {
-            System.out.println("Неверный пароль.");
-            return null;
+            throw new RuntimeException("Неверный пароль");
         }
 
-        auditService.log(username, "вход в систему");
-        System.out.println("Добро пожаловать, " + username + "!");
-        return user;
+        return UserMapper.INSTANCE.toDto(user);
     }
 }

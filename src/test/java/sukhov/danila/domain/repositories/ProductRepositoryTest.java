@@ -1,120 +1,93 @@
 package sukhov.danila.domain.repositories;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
+import sukhov.danila.BaseIntegrationTest;
+import sukhov.danila.domain.entities.BrandEntity;
+import sukhov.danila.domain.entities.CategoryEntity;
 import sukhov.danila.domain.entities.ProductEntity;
-import sukhov.danila.out.persistence.jdbc.ProductRepositoryImpl;
+import sukhov.danila.domain.entities.UserEntity;
+import sukhov.danila.out.persistence.jdbc.*;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-@Testcontainers
-public class ProductRepositoryTest {
-
-    @Container
-    private static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:15")
-                    .withDatabaseName("test_marketplace")
-                    .withUsername("test_user")
-                    .withPassword("test_pass");
-
-    private Connection connection;
+import static org.assertj.core.api.Assertions.*;
+public class ProductRepositoryTest extends BaseIntegrationTest{
     private ProductRepository productRepository;
-    private UserRepository userRepository;
     private BrandRepository brandRepository;
     private CategoryRepository categoryRepository;
+    private UserRepository userRepository;
 
     @BeforeEach
-    void setUp() throws Exception {
-        connection = DriverManager.getConnection(
-                postgres.getJdbcUrl(),
-                postgres.getUsername(),
-                postgres.getPassword()
-        );
+    void setUp() {
+        try (Connection conn = dataSource.getConnection();
+             var stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM marketplace.products");
+            stmt.execute("DELETE FROM marketplace.brands");
+            stmt.execute("DELETE FROM marketplace.categories");
+            stmt.execute("DELETE FROM marketplace.users");
 
-        connection.createStatement().execute("CREATE SCHEMA IF NOT EXISTS marketplace");
-
-        connection.createStatement().execute(
-                "CREATE TABLE marketplace.users (" +
-                        "id BIGSERIAL PRIMARY KEY, " +
-                        "username VARCHAR(100) NOT NULL UNIQUE, " +
-                        "password_hash VARCHAR(255) NOT NULL, " +
-                        "role VARCHAR(20) NOT NULL)"
-        );
-        connection.createStatement().execute(
-                "CREATE TABLE marketplace.categories (" +
-                        "id BIGSERIAL PRIMARY KEY, " +
-                        "name VARCHAR(100) NOT NULL UNIQUE)"
-        );
-        connection.createStatement().execute(
-                "CREATE TABLE marketplace.brands (" +
-                        "id BIGSERIAL PRIMARY KEY, " +
-                        "name VARCHAR(100) NOT NULL UNIQUE, " +
-                        "user_owner_id BIGINT NOT NULL, " +
-                        "FOREIGN KEY (user_owner_id) REFERENCES marketplace.users(id))"
-        );
-        connection.createStatement().execute(
-                "CREATE TABLE marketplace.products (" +
-                        "id BIGSERIAL PRIMARY KEY, " +
-                        "name VARCHAR(255) NOT NULL, " +
-                        "category_id BIGINT NOT NULL, " +
-                        "brand_id BIGINT NOT NULL, " +
-                        "price DECIMAL(19,2) NOT NULL, " +
-                        "user_owner_id BIGINT NOT NULL, " +
-                        "FOREIGN KEY (category_id) REFERENCES marketplace.categories(id), " +
-                        "FOREIGN KEY (brand_id) REFERENCES marketplace.brands(id), " +
-                        "FOREIGN KEY (user_owner_id) REFERENCES marketplace.users(id))"
-        );
-
-        connection.createStatement().execute(
-                "INSERT INTO marketplace.users (username, password_hash, role) " +
-                        "VALUES ('owner', 'hash', 'SELLER')"
-        );
-        connection.createStatement().execute(
-                "INSERT INTO marketplace.categories (name) " +
-                        "VALUES ('Electronics')"
-        );
-        connection.createStatement().execute(
-                "INSERT INTO marketplace.brands (name, user_owner_id) " +
-                        "VALUES ('TestBrand', 1)"
-        );
-
-        productRepository = new ProductRepositoryImpl(connection);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
+            stmt.execute("ALTER SEQUENCE marketplace.users_id_seq RESTART WITH 1");
+            stmt.execute("ALTER SEQUENCE marketplace.categories_id_seq RESTART WITH 1");
+            stmt.execute("ALTER SEQUENCE marketplace.brands_id_seq RESTART WITH 1");
+            stmt.execute("ALTER SEQUENCE marketplace.products_id_seq RESTART WITH 1");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to clean tables", e);
         }
+
+        productRepository = new ProductRepositoryImpl(dataSource);
+        brandRepository = new BrandRepositoryImpl(dataSource);
+        categoryRepository = new CategoryRepositoryImpl(dataSource);
+        userRepository = new UserRepositoryImpl(dataSource);
     }
 
+    /**
+     * Проверяет сохранение нового товара и генерацию ID.
+     */
     @Test
-    void shouldSaveAndFindProduct() {
+    void shouldSaveNewProductAndAssignId() {
+        UserEntity owner = new UserEntity(null, "owner", "hash", "SELLER");
+        owner = userRepository.save(owner);
 
-        ProductEntity product = ProductEntity.builder()
-                .name("Test Laptop")
-                .categoryId(1L)
-                .brandId(1L)
-                .price(new BigDecimal("999.99"))
-                .userOwnerId(1L)
-                .build();
+        CategoryEntity category = new CategoryEntity(null, "Electronics");
+        category = categoryRepository.save(category);
 
+        BrandEntity brand = new BrandEntity(null, "Apple", owner.getId());
+        brand = brandRepository.save(brand);
+
+        ProductEntity product = new ProductEntity(
+                null, "iPhone", category.getId(), brand.getId(), BigDecimal.valueOf(999.99), owner.getId()
+        );
 
         ProductEntity saved = productRepository.save(product);
-        var found = productRepository.findById(saved.getId());
 
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getName()).isEqualTo("iPhone");
+        assertThat(saved.getPrice()).isEqualByComparingTo("999.99");
+    }
+
+    /**
+     * Проверяет поиск товара по ID.
+     */
+    @Test
+    void shouldFindProductById() {
+        UserEntity owner = new UserEntity(null, "owner", "hash", "SELLER");
+        owner = userRepository.save(owner);
+
+        CategoryEntity category = new CategoryEntity(null, "Books");
+        category = categoryRepository.save(category);
+
+        BrandEntity brand = new BrandEntity(null, "O'Reilly", owner.getId());
+        brand = brandRepository.save(brand);
+
+        ProductEntity product = new ProductEntity(
+                null, "Learning Java", category.getId(), brand.getId(), BigDecimal.valueOf(49.99), owner.getId()
+        );
+        product = productRepository.save(product);
+
+        var found = productRepository.findById(product.getId());
 
         assertThat(found).isPresent();
-        assertThat(found.get().getName()).isEqualTo("Test Laptop");
-        assertThat(found.get().getPrice()).isEqualByComparingTo("999.99");
+        assertThat(found.get().getName()).isEqualTo("Learning Java");
     }
 }
