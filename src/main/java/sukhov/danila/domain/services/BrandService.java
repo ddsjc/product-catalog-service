@@ -1,5 +1,7 @@
 package sukhov.danila.domain.services;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sukhov.danila.aspect.AuditAction;
 import sukhov.danila.domain.entities.BrandEntity;
 import sukhov.danila.domain.entities.UserEntity;
@@ -9,6 +11,7 @@ import sukhov.danila.dtos.BrandDTO;
 import sukhov.danila.mappers.BrandMapper;
 import sukhov.danila.out.persistence.jdbc.BrandRepositoryImpl;
 
+import java.util.Optional;
 import java.util.Scanner;
 
 /**
@@ -34,6 +37,8 @@ import java.util.Scanner;
  *     Данила Сухов
  * @version 1.0
  */
+@Transactional
+@Service
 public class BrandService {
     private final BrandRepository brandRepository;
 

@@ -8,7 +8,7 @@
     <groupId>sukhov.danila</groupId>
     <artifactId>productCatalogService</artifactId>
     <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <name>Product Catalog Service</name>
     <description>Сервис для управления каталогом товаров (третье ДЗ)</description>
@@ -26,6 +26,7 @@
         <junit.version>5.10.5</junit.version>
         <assertj.version>3.24.2</assertj.version>
         <mockito.version>5.12.0</mockito.version>
+        <spring.version>6.1.14</spring.version>
         <jakarta.servlet.version>5.0.0</jakarta.servlet.version>
         <jetty.version>11.0.20</jetty.version>
         <jackson.version>2.17.2</jackson.version>
@@ -131,6 +132,38 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

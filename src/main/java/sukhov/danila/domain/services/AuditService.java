@@ -1,5 +1,8 @@
 package sukhov.danila.domain.services;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,6 +21,8 @@ import java.time.LocalDateTime;
  * @author Данила Сухов
  * @version 1.0
  */
+@Transactional
+@Service
 public class AuditService {
     private static final String LOG_FILE = "audit.log";
     public void log(String username, String action){

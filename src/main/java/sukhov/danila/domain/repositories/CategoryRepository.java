@@ -1,10 +1,11 @@
 package sukhov.danila.domain.repositories;
 
+import org.springframework.stereotype.Repository;
 import sukhov.danila.domain.entities.CategoryEntity;
 
 import java.util.List;
 import java.util.Optional;
-
+@Repository
 public interface CategoryRepository  {
     CategoryEntity save (CategoryEntity category);
     Optional<CategoryEntity> findById (Long categoryId);

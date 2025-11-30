@@ -1,19 +1,18 @@
 package sukhov.danila.aspect;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.stereotype.Component;
 import sukhov.danila.config.UserContext;
 import sukhov.danila.domain.services.AuditService;
 
 @Aspect
+@Component
 public class AuditAspect {
-    @After("@annotation(auditAction)")
-    public void logAudit(JoinPoint joinPoint, AuditAction auditAction) {
-        System.out.println(">>> АСПЕКТ СРАБОТАЛ: " + auditAction.value());
+    @After("@annotation(sukhov.danila.aspect.AuditAction)")
+    public void logAudit(org.aspectj.lang.JoinPoint joinPoint, AuditAction auditAction) {
         String username = getCurrentUsername();
-        String action = auditAction.value();
-        new AuditService().log(username, action);
+        new AuditService().log(username, auditAction.value());
     }
 
     private String getCurrentUsername() {

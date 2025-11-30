@@ -1,5 +1,7 @@
 package sukhov.danila.domain.services;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sukhov.danila.aspect.AuditAction;
 import sukhov.danila.domain.entities.*;
 import sukhov.danila.domain.exceptions.AlreadyExistsException;
@@ -45,6 +47,8 @@ import java.util.stream.Collectors;
  *     Данила Сухов
  * @version 1.0
  */
+@Transactional
+@Service
 public class ProductService {
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;

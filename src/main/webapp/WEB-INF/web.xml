@@ -1,0 +1,33 @@
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         version="5.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd">
+
+    <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextClass</param-name>
+            <param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>sukhov.danila.config.WebConfig</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>swagger-ui</servlet-name>
+        <jsp-file>/swagger-ui/index.html</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>swagger-ui</servlet-name>
+        <url-pattern>/swagger-ui/*</url-pattern>
+    </servlet-mapping>
+</web-app>
