@@ -27,7 +27,7 @@
         <assertj.version>3.24.2</assertj.version>
         <mockito.version>5.12.0</mockito.version>
         <spring.version>6.1.14</spring.version>
-        <jakarta.servlet.version>5.0.0</jakarta.servlet.version>
+        <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
         <jetty.version>11.0.20</jetty.version>
         <jackson.version>2.17.2</jackson.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
@@ -139,6 +139,13 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
             <version>${spring.version}</version>
         </dependency>
@@ -163,7 +170,12 @@
             <artifactId>springfox-swagger-ui</artifactId>
             <version>3.0.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>2.9.0</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -267,6 +279,12 @@
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>${jakarta.servlet.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>

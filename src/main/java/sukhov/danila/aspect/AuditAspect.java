@@ -1,5 +1,7 @@
 package sukhov.danila.aspect;
 
+import lombok.RequiredArgsConstructor;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
@@ -8,11 +10,14 @@ import sukhov.danila.domain.services.AuditService;
 
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class AuditAspect {
-    @After("@annotation(sukhov.danila.aspect.AuditAction)")
-    public void logAudit(org.aspectj.lang.JoinPoint joinPoint, AuditAction auditAction) {
+    private final AuditService auditService;
+
+    @After("@annotation(auditAction)")
+    public void logAudit(JoinPoint joinPoint, AuditAction auditAction) {
         String username = getCurrentUsername();
-        new AuditService().log(username, auditAction.value());
+        auditService.log(username, auditAction.value());
     }
 
     private String getCurrentUsername() {

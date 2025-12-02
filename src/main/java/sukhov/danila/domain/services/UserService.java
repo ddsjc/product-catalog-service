@@ -24,4 +24,8 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Товар с ID " + id + " не найден"));
         return UserMapper.INSTANCE.toDto(user);
     }
+
+    public Optional<UserEntity> findUserEntityById(Long id){
+        return  userRepository.findById(id);
+    }
 }

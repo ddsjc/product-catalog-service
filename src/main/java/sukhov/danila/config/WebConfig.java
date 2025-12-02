@@ -5,6 +5,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import sukhov.danila.domain.services.AuditService;
 
 import javax.sql.DataSource;
 
@@ -45,8 +46,9 @@ public class WebConfig implements WebMvcConfigurer {
         );
     }
 
+
     @Bean
-    public sukhov.danila.aspect.AuditAspect auditAspect() {
-        return new sukhov.danila.aspect.AuditAspect();
+    public sukhov.danila.aspect.AuditAspect auditAspect(AuditService auditService) {
+        return new sukhov.danila.aspect.AuditAspect(auditService);
     }
 }
