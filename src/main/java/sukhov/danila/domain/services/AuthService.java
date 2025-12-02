@@ -1,5 +1,7 @@
 package sukhov.danila.domain.services;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sukhov.danila.aspect.AuditAction;
 import sukhov.danila.domain.exceptions.AlreadyExistsException;
 import sukhov.danila.domain.repositories.UserRepository;
@@ -29,6 +31,8 @@ import java.util.Scanner;
  *     Данила Сухов
  * @version 1.0
  */
+@Transactional
+@Service
 public class AuthService {
     private final UserRepository userRepository;
 

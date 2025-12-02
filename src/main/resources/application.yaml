@@ -1,0 +1,13 @@
+db:
+  url: jdbc:postgresql://localhost:5433/marketplace_db
+  username: marketplace_user
+  password: secure_password_123
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+liquibase:
+  changelog: db/changelog/db.changelog-master.yaml
+  default-schema-name: marketplace
+  liquibase-schema-name: liquibase

@@ -1,6 +1,7 @@
 // sukhov.danila.out.persistence.jdbc.ProductRepositoryImpl
 package sukhov.danila.out.persistence.jdbc;
 
+import org.springframework.stereotype.Repository;
 import sukhov.danila.domain.entities.ProductEntity;
 import sukhov.danila.domain.repositories.ProductRepository;
 import sukhov.danila.out.persistence.mappers.ProductRowMapper;
@@ -8,7 +9,7 @@ import sukhov.danila.out.persistence.mappers.ProductRowMapper;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
-
+@Repository
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final DataSource dataSource;

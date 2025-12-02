@@ -1,5 +1,6 @@
 package sukhov.danila.out.persistence.jdbc;
 
+import org.springframework.stereotype.Repository;
 import sukhov.danila.domain.repositories.BrandRepository;
 import sukhov.danila.domain.entities.BrandEntity;
 import sukhov.danila.out.persistence.mappers.BrandRowMapper;
@@ -9,7 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+@Repository
 public class BrandRepositoryImpl implements BrandRepository {
 
     private final DataSource dataSource;

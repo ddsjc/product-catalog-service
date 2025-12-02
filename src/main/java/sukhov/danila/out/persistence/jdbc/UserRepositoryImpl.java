@@ -1,6 +1,7 @@
 package sukhov.danila.out.persistence.jdbc;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 import sukhov.danila.domain.entities.UserEntity;
 import sukhov.danila.domain.repositories.UserRepository;
 import sukhov.danila.out.persistence.mappers.UserRowMapper;
@@ -10,7 +11,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+@Repository
 public class UserRepositoryImpl implements UserRepository {
 
     private final DataSource dataSource;

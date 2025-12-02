@@ -1,12 +1,15 @@
 package sukhov.danila.domain.services;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sukhov.danila.domain.entities.ProductEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+@Transactional
+@Service
 public class CacheService {
     private final Map<String, List<ProductEntity>> cache = new HashMap<>();
     public void put(String key, List<ProductEntity> products){
